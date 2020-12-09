@@ -58,7 +58,30 @@ class LayoutGraph:
         Aplica el algoritmo de Fruchtermann-Reingold para obtener (y mostrar)
         un layout
         '''
-        pass
+        self.grafo_pos_generate()
+        plt.ion()
+
+        if self.refresh == 0:
+            for i in range(self.iters):
+                self.initialize_forces()
+                self.compute_attraction_forces()
+                self.compute_repulsion_forces()
+                self.compute_gravity_forces()
+                self.update_positions()
+
+        else:
+            for i in range(self.iters):
+                if i % self.refresh == 0:
+                    self.show()
+                self.initialize_forces()
+                self.compute_attraction_forces()
+                self.compute_repulsion_forces()
+                self.compute_gravity_forces()
+                self.update_positions()
+
+        plt.ioff()
+        self.show()
+        return
 
     def grafo_pos_generate(self):
         '''
@@ -104,10 +127,9 @@ class LayoutGraph:
 
     def compute_attraction_forces(self):
         '''
-        '''        
+        '''
 
         E = self.grafo[1]
-        fuerzas = {}
 
         for v1,v2 in E:
             # Para cada arista, actualizo las fuerzas de atracción
@@ -131,14 +153,13 @@ class LayoutGraph:
         '''
         Defino la función fr como la función que calcula la fuerza de repulsión
         '''
-        return (self.k * self.c1) / distancia ** 2
+        return (self.k * self.c1) ** 2 / distancia
 
     def compute_repulsion_forces(self):
         '''
         '''
 
         V = self.grafo[0]
-        fuerzas = {}
 
         for v1 in V:
             for v2 in V:
@@ -149,20 +170,16 @@ class LayoutGraph:
 
                     distancia = sqrt((coor_v1.x - coor_v2.x) ** 2 + (coor_v1.y - coor_v2.y) ** 2)
                     if distancia >= 0.05:
-                        #Si la distancia es mayor o igual a 0.05, se procede normalmente
+                        # Se actualizan las fuerzas sólo si la distancia es mayor o igual a 0.05
                         mod_fr = self.f_r(distancia)
 
-                        fx = mod_fr * (coor_v2.x - coor_v1.x) / distancia
-                        fy = mod_fr * (coor_v2.y - coor_v1.y) / distancia
+                        fx = mod_fr * (coor_v1.x - coor_v2.x) / distancia
+                        fy = mod_fr * (coor_v1.y - coor_v2.y) / distancia
 
                         self.fuerzas[v1].x += fx
                         self.fuerzas[v1].y += fy
                         self.fuerzas[v2].x -= fx
                         self.fuerzas[v2].y -= fy
-                    else:
-                        # Si no, se les aplica una fuerza de respulsión (constante ó aleatoria?)
-                        # TODO: Ver qué hacer en este caso
-                        pass
 
         return
 
@@ -185,6 +202,38 @@ class LayoutGraph:
             self.posiciones[v].x += fx / modulo * min(modulo, self.temp)
             self.posiciones[v].y += fy / modulo * min(modulo, self.temp)
 
+        return
+
+    def compute_gravity_forces(self):
+        V = self.grafo[0]
+        P = self.posiciones
+
+        for v in V:
+            distancia = sqrt(P[v].x ** 2 + P[v].y **2)
+            if distancia != 0:
+                fx = 0.5 * (0 - P[v].x) / distancia
+                fy = 0.5 * (0 - P[v].y) / distancia
+
+                self.fuerzas[v].x += fx
+                self.fuerzas[v].y += fy
+
+        return
+
+    def show(self):
+        plt.clf()
+        V = self.grafo[0]
+        E = self.grafo[1]
+        P = self.posiciones
+
+        for v in V:
+            plt.scatter(P[v].x, P[v].y, s = 200, c = 1, alpha = 0.5)
+            plt.text(P[v].x, P[v].y, v)
+
+        for v1,v2 in E:
+            plt.plot([P[v1].x, P[v2].x], [P[v1].y, P[v2].y], linewidth = 2)
+
+        plt.show()
+        plt.pause(0.0001)
         return
 
 
@@ -232,9 +281,23 @@ def main():
     # Refresh, opcional, 1 por defecto
     parser.add_argument(
         '-r', '--refresh',
-        type=int,
+        type = int,
         help = 'Cada cuántas iteraciones graficar. Si es 0, se grafica sólo al final',
         default = 1
+    )
+    # C1 (constante de repulsión), opcional, 0.1 por defecto
+    parser.add_argument(
+        '--c1',
+        type = float,
+        help = 'Constante de repulsión para modificar el esparcimiento',
+        default = 0.1
+    )
+    # C2 (constante de atracción), opcional, 5.0 por defecto
+    parser.add_argument(
+        '--c2',
+        type = float,
+        help = 'Constante de atracción para modificar el esparcimiento',
+        default = 5.0
     )
     # Archivo del cual leer el grafo
     parser.add_argument(
@@ -249,8 +312,8 @@ def main():
         grafo   = lee_grafo_archivo(args.file_name),
         iters   = args.iters,
         refresh = args.refresh,
-        c1      = 0.1,
-        c2      = 5.0,
+        c1      = args.c1,
+        c2      = args.c2,
         temp    = args.temp,
         verbose = args.verbose
     )
