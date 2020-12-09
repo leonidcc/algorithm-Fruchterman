@@ -59,7 +59,6 @@ class LayoutGraph:
         un layout
         '''
         self.grafo_pos_generate()
-        plt.ion()
 
         if self.refresh == 0:
             for i in range(self.iters):
@@ -70,6 +69,8 @@ class LayoutGraph:
                 self.update_positions()
 
         else:
+            plt.ion()
+
             for i in range(self.iters):
                 if i % self.refresh == 0:
                     self.show()
@@ -79,7 +80,8 @@ class LayoutGraph:
                 self.compute_gravity_forces()
                 self.update_positions()
 
-        plt.ioff()
+            plt.ioff()
+
         self.show()
         return
 
