@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-# 6ta Practica Laboratorio 
+# 6ta Practica Laboratorio
 # Complementos Matematicos I
 # Ejemplo parseo argumentos
 
@@ -62,11 +62,7 @@ class LayoutGraph:
 
         if self.refresh == 0:
             for i in range(self.iters):
-                self.initialize_forces()
-                self.compute_attraction_forces()
-                self.compute_repulsion_forces()
-                self.compute_gravity_forces()
-                self.update_positions()
+                self.step()
 
         else:
             plt.ion()
@@ -74,16 +70,19 @@ class LayoutGraph:
             for i in range(self.iters):
                 if i % self.refresh == 0:
                     self.show()
-                self.initialize_forces()
-                self.compute_attraction_forces()
-                self.compute_repulsion_forces()
-                self.compute_gravity_forces()
-                self.update_positions()
+                self.step()
 
             plt.ioff()
 
         self.show()
         return
+
+    def step(self):
+        self.initialize_forces()
+        self.compute_attraction_forces()
+        self.compute_repulsion_forces()
+        self.compute_gravity_forces()
+        self.update_positions()
 
     def grafo_pos_generate(self):
         '''
@@ -195,7 +194,7 @@ class LayoutGraph:
             fx = self.fuerzas[v].x
             fy = self.fuerzas[v].y
             modulo = sqrt(fx ** 2 + fy ** 2)
-            
+
             '''
             Para cada coordenada, actualizo su posición. Si la temperatura es menor al módulo
             del vector de la fuerza, se suma la fuerza sobre su módulo multiplicada por la
@@ -240,6 +239,10 @@ class LayoutGraph:
 
 
 def lee_grafo_archivo(file_path):
+    """
+    grafo_read_file: str -> grafo
+    Crea un grafo a partir de un archivo
+    """
     V = []
     E = []
 
@@ -271,7 +274,8 @@ def main():
         '--iters',
         type = int,
         help = 'Cantidad de iteraciones a efectuar',
-        default = 50
+        # default = 50
+        default = 500
     )
     # Temperatura inicial
     parser.add_argument(
@@ -285,7 +289,8 @@ def main():
         '-r', '--refresh',
         type = int,
         help = 'Cada cuántas iteraciones graficar. Si es 0, se grafica sólo al final',
-        default = 1
+        # default = 1
+        default = 0
     )
     # C1 (constante de repulsión), opcional, 0.1 por defecto
     parser.add_argument(
@@ -299,7 +304,8 @@ def main():
         '--c2',
         type = float,
         help = 'Constante de atracción para modificar el esparcimiento',
-        default = 5.0
+        # default = 5.0
+        default = 10.0
     )
     # Archivo del cual leer el grafo
     parser.add_argument(
