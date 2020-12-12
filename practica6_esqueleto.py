@@ -1,8 +1,7 @@
 #! /usr/bin/python
 
-# 6ta Practica Laboratorio
-# Complementos Matematicos I
-# Ejemplo parseo argumentos
+# Complementos Matemáticos I
+# TP Final
 
 import argparse
 import matplotlib.pyplot as plt
@@ -66,6 +65,8 @@ class LayoutGraph:
 
         else:
             plt.ion()
+            plt.xlim(0, 1000)
+            plt.ylim(0, 1000)
 
             for i in range(self.iters):
                 if i % self.refresh == 0:
@@ -78,11 +79,17 @@ class LayoutGraph:
         return
 
     def step(self):
+        '''
+        Realiza cada paso de la iteración, para inicializar las fuerzas (atracción,
+        repulsión y de gravedad) y actualizarlas, y actualizar las posiciones de
+        los vértices
+        '''
         self.initialize_forces()
         self.compute_attraction_forces()
         self.compute_repulsion_forces()
         self.compute_gravity_forces()
         self.update_positions()
+        return
 
     def grafo_pos_generate(self):
         '''
@@ -122,31 +129,34 @@ class LayoutGraph:
 
     def f_a(self, distancia):
         '''
-        Defino la función fa como la función que calcula la fuerza de atracción
+        Defino la función f_a como la función que calcula la fuerza de atracción
         '''
         return distancia ** 2 / (self.k * self.c2)
 
     def compute_attraction_forces(self):
         '''
+        Para cada arista, actualiza las fuerzas de atracción de sus vértices
         '''
 
         E = self.grafo[1]
 
         for v1,v2 in E:
-            # Para cada arista, actualizo las fuerzas de atracción
+            
             coor_v1 = self.posiciones[v1]
             coor_v2 = self.posiciones[v2]
 
             distancia = sqrt((coor_v1.x - coor_v2.x) ** 2 + (coor_v1.y - coor_v2.y) ** 2)
-            mod_fa = self.f_a(distancia)
+            if distancia >= 0.05:
+                # Se actualizan las fuerzas sólo si la distancia es mayor o igual a 0.05
+                mod_fa = self.f_a(distancia)
 
-            fx = mod_fa * (coor_v2.x - coor_v1.x) / distancia
-            fy = mod_fa * (coor_v2.y - coor_v1.y) / distancia
+                fx = mod_fa * (coor_v2.x - coor_v1.x) / distancia
+                fy = mod_fa * (coor_v2.y - coor_v1.y) / distancia
 
-            self.fuerzas[v1].x += fx
-            self.fuerzas[v1].y += fy
-            self.fuerzas[v2].x -= fx
-            self.fuerzas[v2].y -= fy
+                self.fuerzas[v1].x += fx
+                self.fuerzas[v1].y += fy
+                self.fuerzas[v2].x -= fx
+                self.fuerzas[v2].y -= fy
 
         return
 
@@ -158,6 +168,8 @@ class LayoutGraph:
 
     def compute_repulsion_forces(self):
         '''
+        Para cada vértice, actualiza las fuerzas de repulsión respecto a todos los demás
+        vértices del grafo
         '''
 
         V = self.grafo[0]
@@ -184,9 +196,27 @@ class LayoutGraph:
 
         return
 
+    def compute_gravity_forces(self):
+        '''
+        Para cada vértice del grafo, calcula la fuerza de gravedad
+        '''
+        V = self.grafo[0]
+        P = self.posiciones
+
+        for v in V:
+            distancia = sqrt(P[v].x ** 2 + P[v].y **2)
+            if distancia != 0:
+                fx = 0.5 * (0 - P[v].x) / distancia
+                fy = 0.5 * (0 - P[v].y) / distancia
+
+                self.fuerzas[v].x += fx
+                self.fuerzas[v].y += fy
+
+        return
+
     def update_positions(self):
         '''
-        Actualiza las posiciones de los vértices
+        Actualiza las posiciones de los vértices en función de la temperatura
         '''
         V = self.grafo[0]
 
@@ -205,22 +235,10 @@ class LayoutGraph:
 
         return
 
-    def compute_gravity_forces(self):
-        V = self.grafo[0]
-        P = self.posiciones
-
-        for v in V:
-            distancia = sqrt(P[v].x ** 2 + P[v].y **2)
-            if distancia != 0:
-                fx = 0.5 * (0 - P[v].x) / distancia
-                fy = 0.5 * (0 - P[v].y) / distancia
-
-                self.fuerzas[v].x += fx
-                self.fuerzas[v].y += fy
-
-        return
-
     def show(self):
+        '''
+        Grafica el grafo con las posiciones actuales de sus vértices
+        '''
         plt.clf()
         V = self.grafo[0]
         E = self.grafo[1]
@@ -239,10 +257,9 @@ class LayoutGraph:
 
 
 def lee_grafo_archivo(file_path):
-    """
-    grafo_read_file: str -> grafo
+    '''
     Crea un grafo a partir de un archivo
-    """
+    '''
     V = []
     E = []
 
@@ -274,8 +291,7 @@ def main():
         '--iters',
         type = int,
         help = 'Cantidad de iteraciones a efectuar',
-        # default = 50
-        default = 500
+        default = 50
     )
     # Temperatura inicial
     parser.add_argument(
@@ -289,8 +305,7 @@ def main():
         '-r', '--refresh',
         type = int,
         help = 'Cada cuántas iteraciones graficar. Si es 0, se grafica sólo al final',
-        # default = 1
-        default = 0
+        default = 1
     )
     # C1 (constante de repulsión), opcional, 0.1 por defecto
     parser.add_argument(
@@ -299,12 +314,11 @@ def main():
         help = 'Constante de repulsión para modificar el esparcimiento',
         default = 0.1
     )
-    # C2 (constante de atracción), opcional, 5.0 por defecto
+    # C2 (constante de atracción), opcional, 10.0 por defecto
     parser.add_argument(
         '--c2',
         type = float,
         help = 'Constante de atracción para modificar el esparcimiento',
-        # default = 5.0
         default = 10.0
     )
     # Archivo del cual leer el grafo
