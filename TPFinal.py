@@ -2,6 +2,8 @@
 
 # Complementos Matemáticos I
 # TP Final
+# Alumnos: Cantore, Ignacio - C-6441/6
+#          Chancho Castillo, Leonid - C-6564/1
 
 import argparse
 import matplotlib.pyplot as plt
@@ -19,7 +21,7 @@ class Par:
 
 class LayoutGraph:
 
-    def __init__(self, grafo, iters, refresh, c1, c2, temp, verbose = False):
+    def __init__(self, grafo, iters, refresh, c1, c2, temp, ct, verbose = False):
         '''
         Parámetros:
         grafo: grafo en formato lista
@@ -27,6 +29,8 @@ class LayoutGraph:
         refresh: cada cuántas iteraciones graficar. Si su valor es cero, entonces debe graficarse solo al final.
         c1: constante de repulsión
         c2: constante de atracción
+        temp: valor inicial de la temperatura
+        ct: constante por la que se multiplicará la temperatura en cada iteración
         verbose: si está encendido, activa los comentarios
         '''
 
@@ -43,6 +47,7 @@ class LayoutGraph:
         self.c1      = c1
         self.c2      = c2
         self.temp    = temp
+        self.ct      = ct
         self.verbose = verbose
 
         # Guardo constantes
@@ -60,16 +65,28 @@ class LayoutGraph:
         self.grafo_pos_generate()
 
         if self.refresh == 0:
-            for i in range(self.iters):
-                self.step()
+            if self.verbose:
+                for i in range(self.iters):
+                    self.step()
+                    self.print_info(i)
+            else:
+                for i in range(self.iters):
+                    self.step()
 
         else:
             plt.ion()
 
-            for i in range(self.iters):
-                if i % self.refresh == 0:
-                    self.show()
-                self.step()
+            if self.verbose:
+                for i in range(self.iters):
+                    if i % self.refresh == 0:
+                        self.show()
+                    self.step()
+                    self.print_info(i)
+            else:
+                for i in range(self.iters):
+                    if i % self.refresh == 0:
+                        self.show()
+                    self.step()
 
             plt.ioff()
 
@@ -87,6 +104,7 @@ class LayoutGraph:
         self.compute_repulsion_forces()
         self.compute_gravity_forces()
         self.update_positions()
+        self.update_temperature()
         return
 
     def grafo_pos_generate(self):
@@ -234,6 +252,10 @@ class LayoutGraph:
 
         return
 
+    def update_temperature(self):
+        self.temp *= self.ct
+        return
+
     def show(self):
         '''
         Grafica el grafo con las posiciones actuales de sus vértices
@@ -252,6 +274,23 @@ class LayoutGraph:
 
         plt.show()
         plt.pause(0.0001)
+        return
+
+    def print_info(self, numIter):
+        '''
+        Imprime el mensaje pasado como argumento, referido al estado en que está
+        el algoritmo. Sólo es usada cuando la opción verbose es True
+        '''
+        print('-- Iteración ' + str(numIter + 1) + '/' + str(self.iters) + ' --')
+        print('Temperatura: ' + str(self.temp) + '')
+        print('Posiciones:')
+
+        for v in self.posiciones:
+            x = self.posiciones[v].x
+            y = self.posiciones[v].y
+            print('\tVértice ' + v + '\t x: ' + str(x) + ', y: ' + str(y))
+
+        print('\n')
         return
 
 
@@ -320,6 +359,13 @@ def main():
         help = 'Constante de atracción para modificar el esparcimiento',
         default = 10.0
     )
+    # CT (constante de temperatura), opcional, 0.95 por defecto
+    parser.add_argument(
+        '--ct',
+        type = float,
+        help = 'Constante de temperatura para modificar las variaciones en cada iteración',
+        default = 0.95
+    )
     # Archivo del cual leer el grafo
     parser.add_argument(
         'file_name',
@@ -336,6 +382,7 @@ def main():
         c1      = args.c1,
         c2      = args.c2,
         temp    = args.temp,
+        ct      = args.ct,
         verbose = args.verbose
     )
 
