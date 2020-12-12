@@ -65,8 +65,6 @@ class LayoutGraph:
 
         else:
             plt.ion()
-            plt.xlim(0, 1000)
-            plt.ylim(0, 1000)
 
             for i in range(self.iters):
                 if i % self.refresh == 0:
@@ -113,6 +111,9 @@ class LayoutGraph:
         return
 
     def initialize_forces(self):
+        '''
+        Inicializa las fuerzas de cada vértice en 0
+        '''
         V = self.grafo[0]
 
         for v in V:
@@ -137,7 +138,6 @@ class LayoutGraph:
         '''
         Para cada arista, actualiza las fuerzas de atracción de sus vértices
         '''
-
         E = self.grafo[1]
 
         for v1,v2 in E:
@@ -162,7 +162,7 @@ class LayoutGraph:
 
     def f_r(self, distancia):
         '''
-        Defino la función fr como la función que calcula la fuerza de repulsión
+        Defino la función f_r como la función que calcula la fuerza de repulsión
         '''
         return (self.k * self.c1) ** 2 / distancia
 
@@ -171,7 +171,6 @@ class LayoutGraph:
         Para cada vértice, actualiza las fuerzas de repulsión respecto a todos los demás
         vértices del grafo
         '''
-
         V = self.grafo[0]
 
         for v1 in V:
