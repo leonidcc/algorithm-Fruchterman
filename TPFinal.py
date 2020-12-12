@@ -294,7 +294,7 @@ class LayoutGraph:
         return
 
 
-def lee_grafo_archivo(file_path):
+def graph_read_file(file_path):
     '''
     Crea un grafo a partir de un archivo
     '''
@@ -376,7 +376,7 @@ def main():
 
     # Creamos nuestro objeto LayoutGraph
     layout_gr = LayoutGraph(
-        grafo   = lee_grafo_archivo(args.file_name),
+        grafo   = graph_read_file(args.file_name),
         iters   = args.iters,
         refresh = args.refresh,
         c1      = args.c1,
