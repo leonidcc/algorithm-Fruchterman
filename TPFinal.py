@@ -3,7 +3,7 @@
 # Complementos Matemáticos I
 # TP Final
 # Alumnos: Cantore, Ignacio - C-6441/6
-#          Chancho Castillo, Leonid - C-6564/1
+#          Chanco Castillo, Leonid - C-6564/1
 
 import argparse
 import matplotlib.pyplot as plt
